@@ -1,0 +1,89 @@
+option('tls',
+  type: 'boolean',
+  value: true,
+  description: 'Build with TLS support'
+)
+
+option('tls_force_host_verify',
+  type: 'boolean',
+  value: true,
+  description: 'Forces hostname verification for TLS connections'
+)
+
+option('streaming',
+  type: 'boolean',
+  value: false,
+  description: 'Build NATS Streaming support (deprecated, use JetStream instead)'
+)
+
+option('use_sodium',
+  type: 'boolean',
+  value: false,
+  description: 'Build using libsodium library for enhanced crypto performance'
+)
+
+option('examples',
+  type: 'boolean',
+  value: false,
+  description: 'Build examples'
+)
+
+option('build_libuv_examples',
+  type: 'boolean',
+  value: false,
+  description: 'Build libuv examples (requires libuv)'
+)
+
+option('build_libevent_examples',
+  type: 'boolean',
+  value: false,
+  description: 'Build libevent examples (requires libevent)'
+)
+
+option('static_examples',
+  type: 'boolean',
+  value: false,
+  description: 'Statically link examples'
+)
+
+option('tests',
+  type: 'boolean',
+  value: false,
+  description: 'Build test suite'
+)
+
+option('benchmarks',
+  type: 'boolean',
+  value: false,
+  description: 'Build and run benchmarks'
+)
+
+option('no_spin',
+  type: 'boolean',
+  value: false,
+  description: 'Enable if spin code does not compile on your architecture'
+)
+
+option('no_prefix_connsts',
+  type: 'boolean',
+  value: false,
+  description: 'No prefix for connection status enum (backward compatibility)'
+)
+
+option('experimental',
+  type: 'boolean',
+  value: false,
+  description: 'Build with EXPERIMENTAL API support'
+)
+
+option('compiler_hardening',
+  type: 'boolean',
+  value: false,
+  description: 'Enable compiler hardening flags (PIE, stack protector, etc.)'
+)
+
+option('android',
+  type: 'boolean',
+  value: false,
+  description: 'Building for Android platform'
+)

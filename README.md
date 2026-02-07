@@ -16,6 +16,8 @@ This NATS Client implementation is heavily based on the [NATS GO Client](https:/
 
 - [Installing](#installing)
 - [Building](#building)
+    * [Building with Meson](#building-with-meson)
+    * [Building with CMake](#building-with-cmake)
 	* [TLS Support](#tls-support)
         * [Link statically](#link-statically)
     * [Building with EXPERIMENTAL API support](#building-with-experimental-API-support)
@@ -80,6 +82,49 @@ First, download the source code:
 ```
 git clone git@github.com:nats-io/nats.c.git .
 ```
+
+The NATS C client can be built using either [CMake](https://cmake.org/download/) or [Meson](https://mesonbuild.com/). Both build systems are fully supported.
+
+### Building with Meson
+
+[Meson](https://mesonbuild.com/) is a modern, fast build system with excellent cross-platform support. It's recommended for new projects.
+
+**Quick Start:**
+```bash
+# Configure the build
+meson setup builddir
+
+# Compile
+meson compile -C builddir
+
+# Install (optional)
+meson install -C builddir
+```
+
+**Common Build Options:**
+```bash
+# Build static library only
+meson setup builddir -Ddefault_library=static
+
+# Build without TLS
+meson setup builddir -Dtls=false
+
+# Build with examples
+meson setup builddir -Dexamples=true
+
+# Build with tests
+meson setup builddir -Dtests=true
+
+# Build with libsodium
+meson setup builddir -Duse_sodium=true
+
+# Debug build
+meson setup builddir --buildtype=debug
+```
+
+For detailed Meson build instructions, see [BUILDING_MESON.md](BUILDING_MESON.md).
+
+### Building with CMake
 
 To build the library, use [CMake](https://cmake.org/download/). Note that by default the NATS Streaming API will be built and included in the NATS library.
 See below if you do not want to build the Streaming related APIs.

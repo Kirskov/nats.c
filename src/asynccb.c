@@ -58,9 +58,22 @@ _createAndPostCb(natsAsyncCbType type, natsConnection *nc, natsSubscription *sub
 #endif
     natsConn_retain(nc);
 
+    if (nc != NULL)
+    {
+        natsMutex_Lock(nc->subsMu);
+        nc->asyncCbsInFlight++;
+        natsMutex_Unlock(nc->subsMu);
+    }
+
     s = nats_postAsyncCbInfo(cb);
     if (s != NATS_OK)
     {
+        if (nc != NULL)
+        {
+            natsMutex_Lock(nc->subsMu);
+            nc->asyncCbsInFlight--;
+            natsMutex_Unlock(nc->subsMu);
+        }
         _freeAsyncCbInfo(cb);
         natsConn_release(nc);
     }

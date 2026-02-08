@@ -106,6 +106,14 @@ nats_asyncCbsThreadf(void *arg)
                 break;
         }
 
+        if (nc != NULL)
+        {
+            natsMutex_Lock(nc->subsMu);
+            if (--nc->asyncCbsInFlight == 0)
+                natsCondition_Broadcast(nc->drainCond);
+            natsMutex_Unlock(nc->subsMu);
+        }
+
         natsAsyncCb_Destroy(cb);
         nats_clearLastError();
 

@@ -826,6 +826,8 @@ struct __natsConnection
     bool                drainSubSignalOnRemove;
     bool                drainExcludeRespMux;
     bool                drainConnClosed;
+    int                 asyncCbsInFlight;
+    bool                drainComplete;
 
     // Set to true when owned by a Streaming connection,
     // which will prevent user from calling Close and/or Destroy.

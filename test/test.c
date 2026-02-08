@@ -19216,6 +19216,81 @@ void test_NoDoubleConnClosedOnDrain(void)
     _stopServer(pid);
 }
 
+static void
+_drainWaitSlowSub(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *closure)
+{
+    nats_Sleep(200);
+    natsMsg_Destroy(msg);
+}
+
+void test_DrainWaitsForAsyncCallbacks(void)
+{
+    natsStatus          s;
+    natsConnection      *nc     = NULL;
+    natsOptions         *opts   = NULL;
+    natsSubscription    *sub    = NULL;
+    natsPid             pid     = NATS_INVALID_PID;
+    struct threadArg    arg;
+
+    s = _createDefaultThreadArgsForCbTests(&arg);
+    IFOK(s, natsOptions_Create(&opts));
+    IFOK(s, natsOptions_SetClosedCB(opts, _closedCb, (void*)&arg));
+    if (s != NATS_OK)
+    {
+        _destroyDefaultThreadArgs(&arg);
+        natsOptions_Destroy(opts);
+        FAIL("Unable to setup test");
+    }
+
+    pid = _startServer("nats://127.0.0.1:4222", NULL, true);
+    CHECK_SERVER_STARTED(pid);
+
+    test("WaitForDrainCompletion without drain fails: ");
+    s = natsConnection_ConnectTo(&nc, NATS_DEFAULT_URL);
+    if (s == NATS_OK)
+    {
+        s = natsConnection_WaitForDrainCompletion(nc, 100);
+        if (s == NATS_ILLEGAL_STATE)
+            s = NATS_OK;
+        else
+            s = NATS_ERR;
+        nats_clearLastError();
+    }
+    natsConnection_Destroy(nc);
+    nc = NULL;
+    testCond(s == NATS_OK);
+
+    test("Connect and subscribe: ");
+    s = natsConnection_Connect(&nc, opts);
+    IFOK(s, natsConnection_Subscribe(&sub, nc, "foo", _drainWaitSlowSub, (void*) &arg));
+    testCond(s == NATS_OK);
+
+    test("Publish msg: ");
+    s = natsConnection_PublishString(nc, "foo", "hello");
+    IFOK(s, natsConnection_Flush(nc));
+    testCond(s == NATS_OK);
+
+    test("Start drain: ");
+    s = natsConnection_DrainTimeout(nc, 10);
+    testCond(s == NATS_OK);
+
+    test("WaitForDrainCompletion blocks until done: ");
+    s = natsConnection_WaitForDrainCompletion(nc, 5000);
+    testCond(s == NATS_OK);
+
+    test("Closed callback already invoked: ");
+    natsMutex_Lock(arg.m);
+    s = (arg.closed ? NATS_OK : NATS_ERR);
+    natsMutex_Unlock(arg.m);
+    testCond(s == NATS_OK);
+
+    natsSubscription_Destroy(sub);
+    natsConnection_Destroy(nc);
+    natsOptions_Destroy(opts);
+    _destroyDefaultThreadArgs(&arg);
+    _stopServer(pid);
+}
+
 void test_GetClientID(void)
 {
     natsStatus          s;

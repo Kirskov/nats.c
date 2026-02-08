@@ -3921,6 +3921,17 @@ _flushAndDrain(void *closure)
     if (!closed)
         natsConnection_Close(nc);
 
+    // Wait for all async callbacks (errors, disconnected, closed) to be dispatched.
+    // This wait is unconditional: once Close has been called, we must wait for
+    // callbacks to finish regardless of the original drain timeout.
+    natsMutex_Lock(nc->subsMu);
+    while (nc->asyncCbsInFlight > 0)
+        natsCondition_Wait(nc->drainCond, nc->subsMu);
+    // Signal that drain is fully complete.
+    nc->drainComplete = true;
+    natsCondition_Broadcast(nc->drainCond);
+    natsMutex_Unlock(nc->subsMu);
+
     natsThread_Detach(t);
     natsThread_Destroy(t);
     natsConn_release(nc);
@@ -3994,6 +4005,37 @@ natsConnection_DrainTimeout(natsConnection *nc, int64_t timeout)
 {
     natsStatus s = _drain(nc, timeout);
     return NATS_UPDATE_ERR_STACK(s);
+}
+
+natsStatus
+natsConnection_WaitForDrainCompletion(natsConnection *nc, int64_t timeout)
+{
+    natsStatus  s        = NATS_OK;
+    int64_t     deadline = 0;
+
+    if (nc == NULL)
+        return nats_setDefaultError(NATS_INVALID_ARG);
+
+    if (timeout > 0)
+        deadline = nats_setTargetTime(timeout);
+
+    natsMutex_Lock(nc->subsMu);
+    if (!nc->drainSubSignalOnRemove && !nc->drainComplete && !nc->drainConnClosed)
+    {
+        natsMutex_Unlock(nc->subsMu);
+        return nats_setError(NATS_ILLEGAL_STATE, "%s",
+            "Connection not in draining mode");
+    }
+    while ((s != NATS_TIMEOUT) && !nc->drainComplete)
+    {
+        if (timeout > 0)
+            s = natsCondition_AbsoluteTimedWait(nc->drainCond, nc->subsMu, deadline);
+        else
+            natsCondition_Wait(nc->drainCond, nc->subsMu);
+    }
+    natsMutex_Unlock(nc->subsMu);
+
+    return s;
 }
 
 int

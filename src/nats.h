@@ -5471,6 +5471,24 @@ natsConnection_Drain(natsConnection *nc);
 NATS_EXTERN natsStatus
 natsConnection_DrainTimeout(natsConnection *nc, int64_t timeout);
 
+/** \brief Waits for the drain operation to complete.
+ *
+ * This function blocks until the connection drain has fully completed,
+ * including all pending async callbacks (error, disconnected, closed).
+ *
+ * The timeout is expressed in milliseconds. Zero or negative value
+ * means that the call will not timeout.
+ *
+ * @see natsConnection_Drain
+ * @see natsConnection_DrainTimeout
+ *
+ * @param nc the pointer to the #natsConnection object.
+ * @param timeout how long to wait for the drain to complete, expressed
+ * in milliseconds.
+ */
+NATS_EXTERN natsStatus
+natsConnection_WaitForDrainCompletion(natsConnection *nc, int64_t timeout);
+
 /** \brief Signs any 'message' using the connection's user credentials.
  *
  * The connection must have been created with the #natsOptions_SetUserCredentialsFromFiles.

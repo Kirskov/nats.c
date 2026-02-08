@@ -11,9 +11,7 @@ testsuite = executable('testsuite',
   install: false,
 )
 
-# Read test lists
-test_list = files('list_test.txt')
-bench_list = files('list_bench.txt')
+fs = import('fs')
 
 # Function to parse and add tests from a list file
 parse_test_list = '''
@@ -21,7 +19,6 @@ import sys
 import re
 
 list_file = sys.argv[1]
-test_type = sys.argv[2]  # 'test' or 'bench'
 
 with open(list_file, 'r') as f:
     for line in f:
@@ -35,9 +32,9 @@ with open(list_file, 'r') as f:
 '''
 
 # Add regular tests
-if test_list[0].found()
+if fs.is_file(meson.current_source_dir() / 'list_test.txt')
   test_names_output = run_command('python3', '-c', parse_test_list,
-    meson.current_source_dir() / 'list_test.txt', 'test',
+    meson.current_source_dir() / 'list_test.txt',
     check: false)
 
   if test_names_output.returncode() == 0
@@ -56,9 +53,9 @@ endif
 
 # Add benchmarks (if enabled)
 if get_option('benchmarks')
-  if bench_list[0].found()
+  if fs.is_file(meson.current_source_dir() / 'list_bench.txt')
     bench_names_output = run_command('python3', '-c', parse_test_list,
-      meson.current_source_dir() / 'list_bench.txt', 'bench',
+      meson.current_source_dir() / 'list_bench.txt',
       check: false)
 
     if bench_names_output.returncode() == 0
@@ -79,10 +76,9 @@ endif
 
 # Add streaming tests (if streaming is enabled)
 if nats_build_streaming
-  stan_list = files('list_stan.txt')
-  if stan_list[0].found()
+  if fs.is_file(meson.current_source_dir() / 'list_stan.txt')
     stan_names_output = run_command('python3', '-c', parse_test_list,
-      meson.current_source_dir() / 'list_stan.txt', 'test',
+      meson.current_source_dir() / 'list_stan.txt',
       check: false)
 
     if stan_names_output.returncode() == 0

@@ -36,7 +36,6 @@ nats_build_no_spin = get_option('no_spin')
 nats_build_no_prefix_connsts = get_option('no_prefix_connsts')
 nats_with_experimental = get_option('experimental')
 nats_compiler_hardening = get_option('compiler_hardening')
-nats_coverage = get_option('b_coverage')
 
 # Compile definitions
 compile_args = []
